@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost - Player Profile</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card h3 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            border-bottom: 2px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+        
+        .identity-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 3px solid #ff6b6b;
+        }
+        
+        .info-item strong {
+            color: #ff6b6b;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin: 20px 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-bar {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stat-label {
+            padding: 10px 15px;
+            font-weight: 600;
+            color: #e0e0e0;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .stat-value {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            color: #fff;
+            z-index: 2;
+        }
+        
+        .stat-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
+            transition: width 2s ease-out;
+            border-radius: 10px;
+        }
+        
+        .passive-skill {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .skill-title {
+            color: #ff6b6b;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .skill-description {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .skill-lore {
+            font-style: italic;
+            color: #ccc;
+            border-left: 3px solid #ff6b6b;
+            padding-left: 15px;
+            margin-top: 15px;
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .inventory-item {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .inventory-item:hover {
+            transform: scale(1.05);
+            border-color: #ff6b6b;
+        }
+        
+        .financial-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .money-display {
+            background: linear-gradient(135deg, #2d5a27, #4a7c59);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .money-amount {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .warning-banner {
+            background: linear-gradient(135deg, #8B0000, #DC143C);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 30px;
+            border: 2px solid #FF4500;
+        }
+        
+        .warning-banner h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .identity-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .financial-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🜏 LYZEROTH XAVIER – "GHOST"</h1>
+            <div class="subtitle">HFB: Crimson Pandora | Elite Hitman Profile</div>
+        </div>
+        
+        <div class="grid">
+            <!-- Identity Card -->
+            <div class="card">
+                <h3>👤 Identity Information</h3>
+                <div class="identity-info">
+                    <div class="info-item">
+                        <strong>Real Name:</strong>
+                        Lyzeroth Xavier
+                    </div>
+                    <div class="info-item">
+                        <strong>Alias:</strong>
+                        Simon "Ghost" Riley
+                    </div>
+                    <div class="info-item">
+                        <strong>Age:</strong>
+                        31 Years Old
+                    </div>
+                    <div class="info-item">
+                        <strong>Gender:</strong>
+                        Male
+                    </div>
+                    <div class="info-item">
+                        <strong>Profession:</strong>
+                        Doctor (Cover) / Hitman
+                    </div>
+                    <div class="info-item">
+                        <strong>Role:</strong>
+                        Civilian (Criminal)
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Combat Stats Radar Chart -->
+            <div class="card">
+                <h3>⚔️ Combat Performance</h3>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Physical & Mental Stats -->
+        <div class="card">
+            <h3>📊 Complete Statistics Analysis</h3>
+            <div class="stats-grid">
+                <div class="stat-bar">
+                    <div class="stat-label">Strength</div>
+                    <div class="stat-value">97/100</div>
+                    <div class="stat-fill" data-width="97%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">Speed</div>
+                    <div class="stat-value">94/100</div>
+                    <div class="stat-fill" data-width="94%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">Agility</div>
+                    <div class="stat-value">92/100</div>
+                    <div class="stat-fill" data-width="92%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">Endurance</div>
+                    <div class="stat-value">95/100</div>
+                    <div class="stat-fill" data-width="95%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">Durability</div>
+                    <div class="stat-value">96/100</div>
+                    <div class="stat-fill" data-width="96%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">Stamina</div>
+                    <div class="stat-value">94/100</div>
+                    <div class="stat-fill" data-width="94%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">IQ</div>
+                    <div class="stat-value">142+</div>
+                    <div class="stat-fill" data-width="95%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">Stealth</div>
+                    <div class="stat-value">99/100</div>
+                    <div class="stat-fill" data-width="99%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">Marksmanship</div>
+                    <div class="stat-value">98/100</div>
+                    <div class="stat-fill" data-width="98%"></div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">Combat Skill</div>
+                    <div class="stat-value">97/100</div>
+                    <div class="stat-fill" data-width="97%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Passive Skills -->
+        <div class="card">
+            <h3>⚡ Passive Abilities & Skills</h3>
+            
+            <div class="passive-skill">
+                <div class="skill-title">1. Ghost Protocol (Passive)</div>
+                <div class="skill-description">
+                    • Noise reduction 35%, movement traces hampir tidak terdeteksi<br>
+                    • First hit dari stealth = critical damage<br>
+                    • Invisible di radar/scanner (fisik tidak terlihat, bayangan kecil masih bisa terbaca)
+                </div>
+                <div class="skill-lore">
+                    Lore: Musuh mengira dia tidak ada... sampai kepala mereka sudah miring 90°. Phantom yang meninggalkan jejak kematian saja.
+                </div>
+            </div>
+            
+            <div class="passive-skill">
+                <div class="skill-title">2. Predator's Instinct (Passive, Always Active)</div>
+                <div class="skill-description">
+                    • Combat Awareness 360° dalam radius 20m, termasuk blind spot<br>
+                    • Target Prioritization → fokus otomatis ke ancaman paling berbahaya<br>
+                    • Calm Under Fire → kebal efek panik, suppressive fire, dan intimidasi<br>
+                    • Opportunistic Execution → musuh yang terganggu = open kill (+15% damage)<br>
+                    • Aggressive Attack → semakin lama fight, semakin brutal
+                </div>
+                <div class="skill-lore">
+                    Lore: Tidak sekadar menghilang, tapi berburu. Gerakan musuh sudah terbaca sebelum terjadi.
+                </div>
+            </div>
+            
+            <div class="passive-skill">
+                <div class="skill-title">3. Iron Maelstrom (Passive, Always Active)</div>
+                <div class="skill-description">
+                    • Enhanced Striking Force → +40% power melee, bahkan lawan berarmor bisa terpental<br>
+                    • Counterflow Instinct → auto counter dalam 0,2 detik dari serangan lawan<br>
+                    • Pain Nullification → tahan 65% rasa sakit fisik<br>
+                    • Close-Range Predator → +20% speed attack/evade di jarak <3m<br>
+                    • Bone Breaker → 30% chance crit melee bikin fracture (-5% attack musuh, 5 detik)
+                </div>
+                <div class="skill-lore">
+                    Lore: Jarak dekat bukan risiko, tapi undangan. Mesin penghancur yang tidak berhenti.
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <!-- Inventory -->
+            <div class="card">
+                <h3>🎯 Combat Inventory</h3>
+                <div class="inventory-grid">
+                    <div class="inventory-item">
+                        <strong>📋 Paspor</strong><br>
+                        <small>Identity Document (18+)</small>
+                    </div>
+                    <div class="inventory-item">
+                        <strong>🔫 HK23</strong><br>
+                        <small>+ Silencer + LIM</small>
+                    </div>
+                    <div class="inventory-item">
+                        <strong>🗡️ Karambit</strong><br>
+                        <small>Melee Weapon</small>
+                    </div>
+                    <div class="inventory-item">
+                        <strong>🎯 AI AX50</strong><br>
+                        <small>Sniper Rifle</small>
+                    </div>
+                    <div class="inventory-item">
+                        <strong>⚡ SCAR-H</strong><br>
+                        <small>Assault Rifle</small>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">🏎️ Property</h3>
+                <div class="inventory-item" style="margin-top: 15px;">
+                    <strong>SSC Tuatara</strong><br>
+                    <small>Hypercar - Top Speed: 331 mph</small>
+                </div>
+            </div>
+            
+            <!-- Financial Status -->
+            <div class="card">
+                <h3>💰 Financial Status</h3>
+                <div class="financial-info">
+                    <div class="money-display">
+                        <div>Cash Money</div>
+                        <div class="money-amount">$5.1M</div>
+                    </div>
+                    <div class="money-display">
+                        <div>Bank Account</div>
+                        <div class="money-amount">$100</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 8px;">
+                    <strong>💡 Financial Analysis:</strong><br>
+                    Sebagian besar aset dalam bentuk cash untuk operasi bawah tanah. Bank account rendah untuk menghindari pelacakan pihak berwenang.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Martial Arts & Training -->
+        <div class="card">
+            <h3>🥋 Combat Training & Education</h3>
+            <div class="identity-info">
+                <div class="info-item">
+                    <strong>Education:</strong>
+                    Graduated (Lulus)
+                </div>
+                <div class="info-item">
+                    <strong>Martial Arts:</strong>
+                    Krav Maga, MCMAP, QcQ Hybrid
+                </div>
+                <div class="info-item">
+                    <strong>Skill Level:</strong>
+                    Maximum Level
+                </div>
+                <div class="info-item">
+                    <strong>Fame/Popularity:</strong>
+                    0/1000 (Public)
+                </div>
+            </div>
+        </div>
+        
+        <div class="warning-banner">
+            <h3>⚠️ CLASSIFIED PROFILE</h3>
+            <p>Ghost adalah seorang hitman profesional yang beroperasi di dark web. Popularitas publiknya nol karena identitas tersembunyi, namun memiliki reputasi tinggi di underworld. Kombinasi skill medis dan combat menjadikannya pembunuh yang sangat efisien dan sulit dilacak.</p>
+        </div>
+    </div>
+
+    <script>
+        // Animate stat bars on load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const statFills = document.querySelectorAll('.stat-fill');
+                statFills.forEach(fill => {
+                    const width = fill.getAttribute('data-width');
+                    fill.style.width = width;
+                });
+            }, 500);
+        });
+
+        // Radar Chart
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        const radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Strength', 'Speed', 'Agility', 'Stealth', 'Marksmanship', 'Combat', 'Endurance', 'Durability'],
+                datasets: [{
+                    label: 'Ghost Stats',
+                    data: [97, 94, 92, 99, 98, 97, 95, 96],
+                    backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                    borderColor: 'rgba(255, 107, 107, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(255, 107, 107, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(255, 107, 107, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e0e0e0'
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        pointLabels: {
+                            color: '#e0e0e0'
+                        },
+                        ticks: {
+                            color: '#e0e0e0',
+                            backdropColor: 'transparent'
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
